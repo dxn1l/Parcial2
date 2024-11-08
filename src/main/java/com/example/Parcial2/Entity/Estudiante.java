@@ -1,13 +1,10 @@
 package com.example.Parcial2.Entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.GenericGenerator;
-
-import java.util.concurrent.ThreadLocalRandom;
 
 @Entity
 @Table(name = "estudiantes")
-public class Estudiante implements Runnable{
+public class Estudiante implements Runnable {
 
     @Id
     private Long id;
@@ -26,9 +23,6 @@ public class Estudiante implements Runnable{
 
     @Column(name = "genero")
     private String genero;
-
-    @Column(name = "tiempo_en_linea")
-    private Double tiempoEnLinea;
 
     // Getters y setters
     public Long getId() {
@@ -79,27 +73,9 @@ public class Estudiante implements Runnable{
         this.genero = genero;
     }
 
-    public Double getTiempoEnLinea() {
-        return tiempoEnLinea;
-    }
-
-    public void setTiempoEnLinea(Double tiempoEnLinea) {
-        this.tiempoEnLinea = tiempoEnLinea;
-    }
-
     @Override
     public void run() {
-        // Simular el proceso que pasa el estudiante
-        try {
-            // Supongamos que el proceso tarda entre 1 y 5 segundos
-            int tiempoProceso = ThreadLocalRandom.current().nextInt(1, 6);
-            this.tiempoEnLinea = (double) tiempoProceso;
-            Thread.sleep(tiempoProceso * 1000);
-
-            // Aquí puedes incluir cualquier otra lógica que necesites
-
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        // Implementar la lógica que se debe ejecutar en un hilo separado
+        System.out.println("Procesando estudiante con ID: " + id);
     }
 }

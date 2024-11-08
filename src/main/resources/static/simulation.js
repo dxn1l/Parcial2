@@ -39,30 +39,22 @@ function update() {
     circles.exit().remove();
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    const container = document.createElement("div");
-    container.id = "chartContainer";
-    container.style.width = "80%";
-    container.style.height = "600px";
-    container.style.margin = "0 auto";
-    container.style.textAlign = "center";
 
-    const button = document.createElement("button");
-    button.innerText = "Reiniciar Simulación";
-    button.style.display = "block";
-    button.style.margin = "20px auto";
-    button.addEventListener("click", function() {
-        balls.length = 0;
-        bins.fill(0);
-        svg.selectAll("circle").remove();
-        simulate();
-    });
-
-    document.body.appendChild(button);
-    document.body.appendChild(container);
-    container.appendChild(svg.node());
-
-    simulate();
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/simulate')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('ball-container');
+            data.forEach(estudiante => {
+                const ball = document.createElement('div');
+                ball.className = 'ball';
+                ball.style.left = `${Math.random() * 100}%`;
+                ball.style.top = `${Math.random() * 100}%`;
+                ball.textContent = `ID: ${estudiante.id}`;
+                container.appendChild(ball);
+            });
+        })
+        .catch(error => console.error('Error fetching data:', error));
 });
 
 function simulate() {

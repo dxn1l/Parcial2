@@ -12,17 +12,15 @@ import java.io.IOException;
 import java.util.Optional;
 
 @Service
-public class  EstudianteService {
+public class EstudianteService {
 
     @Autowired
     private EstudianteRepository estudianteRepository;
-
 
     public void guardarEstudiantes() {
 
         // Eliminar la tabla si existe
         estudianteRepository.deleteAllInBatch();
-
 
         try (BufferedReader br = new BufferedReader(new FileReader("src/main/resources/datos_estudiantes.csv"))) {
             // Omitir la fila de encabezado
@@ -44,6 +42,7 @@ public class  EstudianteService {
             throw new RuntimeException("fallo al obtener los datos", e);
         }
     }
+
     public Optional<Estudiante> obtenerEstudiante(Long id) {
         return estudianteRepository.findById(id);
     }
