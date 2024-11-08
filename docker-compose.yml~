@@ -3,22 +3,22 @@ version: '3.8'
 services:
   mysql:
     image: mysql:latest
-    container_name: campanaGauss
+    container_name: gauss_mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: campana_database
+      MYSQL_DATABASE: gauss_database
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin
     ports:
-      - "3309:3306"
+      - "3301:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
-      - mysql_campanaNet
+      - mysql_gaussNet
 
 volumes:
   mysql_data:
 
 networks:
-  mysql_campanaNet:
+  mysql_gaussNet:
     driver: bridge

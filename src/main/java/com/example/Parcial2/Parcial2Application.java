@@ -1,5 +1,6 @@
 package com.example.Parcial2;
 
+import com.example.Parcial2.Service.CsvGeneratorService;
 import com.example.Parcial2.Service.EstudianteService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -15,10 +16,10 @@ public class Parcial2Application {
 
 
 	@Bean
-	public CommandLineRunner commandLineRunner(EstudianteService estudianteService) {
+	public CommandLineRunner commandLineRunner(CsvGeneratorService csvGeneratorService) {
 		return args -> {
-			estudianteService.guardarEstudiantes();
+			String filePath = "src/main/resources/datos_estudiantes.csv";
+			csvGeneratorService.generateCsv(filePath);
 		};
-
 	}
 }
