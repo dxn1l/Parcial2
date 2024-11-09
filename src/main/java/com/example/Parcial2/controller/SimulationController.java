@@ -26,6 +26,8 @@ public class SimulationController {
 
     @GetMapping("/startSimulation")
     public String startSimulation() {
+        System.out.println("=== Iniciando simulación de la fábrica ===");
+
         // Crear y lanzar hilos de estaciones de trabajo (productores)
         List<EstacionDeTrabajo> estaciones = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -41,6 +43,7 @@ public class SimulationController {
         // Simular la distribución de la caída de bolas
         distribucionService.simularCaidaDeBolas(100);
 
-        return "Simulación iniciada";
+        System.out.println("=== Simulación en curso... consulte la consola para los detalles de producción y ensamblaje ===");
+        return "Simulación iniciada. Consulte la consola para ver los detalles.";
     }
 }

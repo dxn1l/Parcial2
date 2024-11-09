@@ -14,12 +14,18 @@ public class EnsamblajeService implements Runnable {
     public void run() {
         try {
             while (true) {
+                System.out.println("Línea de ensamblaje esperando componente del buffer...");
                 Integer componente = buffer.take(); // Toma un componente del buffer
-                System.out.println("Ensamblando componente: " + componente);
-                // Lógica adicional de ensamblaje...
+                System.out.println("Línea de ensamblaje ha tomado el componente: " + componente);
+
+                // Simula el tiempo de ensamblaje
+                Thread.sleep(1000);
+                System.out.println("Línea de ensamblaje ha ensamblado el componente: " + componente);
             }
         } catch (InterruptedException e) {
+            System.out.println("Línea de ensamblaje fue interrumpida.");
             Thread.currentThread().interrupt(); // Manejo de la interrupción del hilo
         }
     }
 }
+
