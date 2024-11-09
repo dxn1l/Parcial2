@@ -41,11 +41,18 @@ public class DistribucionService {
                 int posicionFinal = simularCaida();
                 contenedores.put(posicionFinal, contenedores.get(posicionFinal) + 1);
 
-                // Verificar si el emisor sigue activo antes de intentar enviar datos
+                // Crear un mensaje específico para cada bola añadida
+                System.out.println("Bola añadida en el contenedor " + posicionFinal + ", estado actual: " + contenedores);
+                String mensaje = "Bola añadida en el contenedor " + posicionFinal + ". Estado actual: " + contenedores;
+
+                // Enviar al frontend el estado actual de los contenedores y el mensaje
                 if (emitter != null) {
                     try {
-                        // Si el emisor ya está completo, interrumpimos el bucle
-                        emitter.send(SseEmitter.event().data(contenedores, MediaType.APPLICATION_JSON));
+                        Map<String, Object> data = new HashMap<>();
+                        data.put("contenedores", contenedores);
+                        data.put("mensaje", mensaje);
+
+                        emitter.send(SseEmitter.event().data(data, MediaType.APPLICATION_JSON));
                     } catch (IllegalStateException e) {
                         System.out.println("Emisor completado, interrumpiendo la transmisión.");
                         break;
@@ -56,20 +63,21 @@ public class DistribucionService {
                     }
                 }
 
-                // Simular un pequeño retraso para que el cambio en la gráfica sea visible
-                Thread.sleep(10); // Ajusta el retraso según lo necesario
+                // Ajuste de la velocidad de la simulación
+                Thread.sleep(50);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
             if (emitter != null) {
                 try {
-                    emitter.complete(); // Finaliza la transmisión después de completar la simulación
+                    emitter.complete();
                 } catch (IllegalStateException e) {
                     System.out.println("El emisor ya fue completado previamente.");
                 }
             }
         }
+
     }
 
     // Método que simula la caída de una bola y determina su posición final

@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <title>Simulación de Fábrica - Distribución Normal</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        /* Estilos para el layout y la consola */
+        #layout {
+            display: flex;
+        }
+        #chart {
+            width: 70%;
+        }
+        #console {
+            width: 30%;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #222;
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+        }
+    </style>
 </head>
 <body>
 <h1>Simulación de Fábrica - Distribución Normal</h1>
@@ -18,37 +36,54 @@
 
 <button onclick="startSimulation()">Iniciar Simulación</button>
 
-<h2>Distribución Normal</h2>
-<div id="chart"></div>
+<div id="layout">
+    <div id="chart"></div>
+    <div id="console"></div> <!-- Consola de mensajes -->
+</div>
 
 <script>
     function startSimulation() {
         const numEstaciones = document.getElementById('numEstaciones').value;
         const numBolas = document.getElementById('numBolas').value;
 
-        // Inicia la simulación en el backend
         fetch(`/startSimulation?numBolas=${numBolas}&numEstaciones=${numEstaciones}`)
             .then(response => response.text())
             .then(data => {
-                console.log(data); // Mensaje de confirmación en consola
+                console.log(data);
 
-                // Conectar al stream de eventos en tiempo real
                 const eventSource = new EventSource(`/simulate/stream?numBolas=${numBolas}`);
 
                 eventSource.onmessage = function(event) {
-                    const data = JSON.parse(event.data);
-                    updateChart(data); // Actualiza la gráfica con cada evento recibido
+                    const receivedData = JSON.parse(event.data);
+                    const contenedores = receivedData.contenedores;
+                    const mensaje = receivedData.mensaje;
+
+                    // Actualizar el gráfico
+                    updateChart(contenedores);
+
+                    // Mostrar el mensaje en la "consola"
+                    addConsoleMessage(mensaje);
                 };
 
                 eventSource.onerror = function() {
-                    console.log("Conexión finalizada.");
-                    eventSource.close(); // Cierra la conexión al completar la simulación o en caso de error
+                    console.log("Conexión cerrada");
+                    eventSource.close();
                 };
             });
     }
 
-    function updateChart(data) {
-        const chartData = Object.entries(data).map(([key, value]) => ({
+    function addConsoleMessage(message) {
+        const consoleElement = document.getElementById("console");
+        const messageElement = document.createElement("div");
+        messageElement.textContent = message;
+        consoleElement.appendChild(messageElement);
+
+        // Desplazar hacia abajo automáticamente para mostrar el último mensaje
+        consoleElement.scrollTop = consoleElement.scrollHeight;
+    }
+
+    function updateChart(contenedores) {
+        const chartData = Object.entries(contenedores).map(([key, value]) => ({
             posicion: +key,
             cantidad: +value
         }));
@@ -60,7 +95,7 @@
         const maxCantidad = d3.max(chartData, d => d.cantidad);
 
         const svg = d3.select("#chart")
-            .html("") // Limpiar contenido previo
+            .html("")
             .append("svg")
             .attr("width", width)
             .attr("height", height);
