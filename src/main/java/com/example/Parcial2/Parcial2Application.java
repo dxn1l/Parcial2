@@ -13,10 +13,4 @@ public class Parcial2Application {
 		SpringApplication.run(Parcial2Application.class, args);
 	}
 
-	@Bean
-	public CommandLineRunner commandLineRunner(SimulationController simulationController) {
-		return args -> {
-			simulationController.startSimulation();
-		};
-	}
 }

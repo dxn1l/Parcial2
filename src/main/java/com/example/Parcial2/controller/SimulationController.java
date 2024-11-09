@@ -1,7 +1,7 @@
 package com.example.Parcial2.controller;
 
 import com.example.Parcial2.Entity.EstacionDeTrabajo;
-import com.example.Parcial2.Service.EnsamblajeService;
+import com.example.Parcial2.service.EnsamblajeService;
 import com.example.Parcial2.Service.DistribucionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,27 +32,35 @@ public class SimulationController {
     }
 
     @GetMapping("/startSimulation")
-    public String startSimulation() {
-        System.out.println("=== Iniciando simulación de la fábrica con " + numEstaciones + " estaciones ===");
+    public String startSimulation(
+            @RequestParam(value = "numBolas", required = false, defaultValue = "1000") int numBolas,
+            @RequestParam(value = "numEstaciones", required = false, defaultValue = "10") int numEstaciones) {
+
+        System.out.println("=== Iniciando simulación de la fábrica con " + numEstaciones + " estaciones y " + numBolas + " bolas ===");
+
+        // Reiniciar el buffer (vaciarlo)
+        buffer.clear();
 
         // Crear y lanzar hilos de estaciones de trabajo (productores)
         List<EstacionDeTrabajo> estaciones = new ArrayList<>();
         for (int i = 0; i < numEstaciones; i++) {
             EstacionDeTrabajo estacion = new EstacionDeTrabajo((long) i, buffer, i);
             estaciones.add(estacion);
-            executorService.submit(estacion);
+            executorService.submit(estacion); // Ejecuta el hilo de la estación de trabajo
         }
 
         // Crear y lanzar el hilo del consumidor (ensamblaje)
         EnsamblajeService ensamblajeService = new EnsamblajeService(buffer);
-        executorService.submit(ensamblajeService);
+        executorService.submit(ensamblajeService); // Ejecuta el hilo de la línea de ensamblaje
 
-        // Simular la distribución de la caída de bolas
-        distribucionService.simularCaidaDeBolas(1000);
+        // Ejecutar la simulación de caída de bolas con el número especificado de bolas
+        distribucionService.simularCaidaDeBolas(numBolas);
 
         System.out.println("=== Simulación en curso... consulte la consola para los detalles de producción y ensamblaje ===");
         return "Simulación iniciada. Consulte la consola para ver los detalles.";
     }
+
+
 
 
     @PostMapping("/configureSimulation")
@@ -63,9 +71,9 @@ public class SimulationController {
         return "Configuración exitosa: " + numEstaciones + " estaciones.";
     }
     @GetMapping("/simulate")
-    public ResponseEntity<Map<Integer, Integer>> simulateAndGetDistribution(@RequestParam int numBolas) {
-        // Ejecuta la simulación con el número de bolas especificado por el usuario
-        distribucionService.simularCaidaDeBolas(numBolas);
+    public ResponseEntity<Map<Integer, Integer>> simulateAndGetDistribution() {
+        // Ejecutar la simulación para calcular la distribución
+        distribucionService.simularCaidaDeBolas(10000);
 
         // Obtener la distribución resultante
         Map<Integer, Integer> distributionData = distribucionService.obtenerDistribucion();

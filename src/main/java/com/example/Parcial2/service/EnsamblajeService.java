@@ -1,4 +1,4 @@
-package com.example.Parcial2.Service;
+package com.example.Parcial2.service;
 
 import java.util.concurrent.BlockingQueue;
 
@@ -24,8 +24,9 @@ public class EnsamblajeService implements Runnable {
             }
         } catch (InterruptedException e) {
             System.out.println("Línea de ensamblaje fue interrumpida.");
-            Thread.currentThread().interrupt(); // Manejo de la interrupción del hilo
+            Thread.currentThread().interrupt();
         }
     }
 }
+
 

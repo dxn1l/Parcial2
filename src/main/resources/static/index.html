@@ -26,15 +26,17 @@
         const numEstaciones = document.getElementById('numEstaciones').value;
         const numBolas = document.getElementById('numBolas').value;
 
-        // Configura la simulación con el número de estaciones
-        fetch(`/configureSimulation?numEstaciones=${numEstaciones}`, { method: 'POST' })
+        // Configura y lanza la simulación con los valores especificados
+        fetch(`/startSimulation?numBolas=${numBolas}&numEstaciones=${numEstaciones}`)
             .then(response => response.text())
-            .then(data => console.log(data));
+            .then(data => {
+                console.log(data); // Mensaje de confirmación en consola
 
-        // Inicia la simulación con el número de bolas especificado y actualiza el gráfico
-        fetch(`/simulate?numBolas=${numBolas}`)
-            .then(response => response.json())
-            .then(data => updateChart(data));
+                // Llama al endpoint para obtener la distribución de la simulación
+                fetch('/simulate')
+                    .then(response => response.json())
+                    .then(data => updateChart(data));
+            });
     }
 
     function updateChart(data) {
@@ -80,5 +82,6 @@
             .attr("fill", "black");
     }
 </script>
+
 </body>
 </html>
