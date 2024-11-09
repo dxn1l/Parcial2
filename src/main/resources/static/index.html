@@ -2,27 +2,74 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ball Drop Simulation</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <style>
-        .ball {
-            fill: steelblue;
-            stroke: black;
-            stroke-width: 1px;
-        }
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-    </style>
+    <title>Simulación de Fábrica - Distribución Normal</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
 </head>
 <body>
-<svg width="800" height="600"></svg>
-<script src="simulation.js"></script>
+<h1>Simulación de Fábrica - Distribución Normal</h1>
+
+<label for="numEstaciones">Número de estaciones de trabajo:</label>
+<input type="number" id="numEstaciones" min="1" max="20" value="10">
+<button onclick="startSimulation()">Iniciar Simulación</button>
+
+<h2>Distribución Normal</h2>
+<div id="chart"></div>
+
+<script>
+    function startSimulation() {
+        const numEstaciones = document.getElementById('numEstaciones').value;
+
+        // Configura la simulación con el número de estaciones
+        fetch(`/configureSimulation?numEstaciones=${numEstaciones}`, { method: 'POST' })
+            .then(response => response.text())
+            .then(data => console.log(data));
+
+        // Inicia la simulación y actualiza el gráfico
+        fetch('/simulate')
+            .then(response => response.json())
+            .then(data => updateChart(data));
+    }
+
+    function updateChart(data) {
+        const chartData = Object.entries(data).map(([key, value]) => ({
+            posicion: +key,
+            cantidad: +value
+        }));
+
+        const width = 500;
+        const height = 300;
+        const barWidth = width / chartData.length;
+
+        const svg = d3.select("#chart")
+            .html("") // Limpiar contenido previo
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(chartData, d => d.cantidad)])
+            .range([height, 0]);
+
+        svg.selectAll("rect")
+            .data(chartData)
+            .enter()
+            .append("rect")
+            .attr("x", (d, i) => i * barWidth)
+            .attr("y", d => yScale(d.cantidad))
+            .attr("width", barWidth - 2)
+            .attr("height", d => height - yScale(d.cantidad))
+            .attr("fill", "steelblue");
+
+        svg.selectAll("text")
+            .data(chartData)
+            .enter()
+            .append("text")
+            .text(d => d.cantidad)
+            .attr("x", (d, i) => i * barWidth + (barWidth / 2))
+            .attr("y", d => yScale(d.cantidad) - 5)
+            .attr("text-anchor", "middle")
+            .attr("fill", "black");
+    }
+</script>
 </body>
 </html>

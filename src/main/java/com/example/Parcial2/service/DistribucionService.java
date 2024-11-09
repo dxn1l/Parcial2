@@ -20,25 +20,30 @@ public class DistribucionService {
     }
 
     public void simularCaidaDeBolas(int numBolas) {
+        // Reiniciar contenedores antes de cada simulación
+        contenedores.replaceAll((k, v) -> 0);
+
         for (int i = 0; i < numBolas; i++) {
-            int posicionFinal = simularCaida(); // Obtener posición final de una bola
+            int posicionFinal = simularCaida();
             contenedores.put(posicionFinal, contenedores.get(posicionFinal) + 1);
         }
         mostrarDistribucion();
     }
 
+
+
     private int simularCaida() {
-        int posicion = numClavos / 2; // Comienza en el centro del tablero
-        for (int i = 0; i < numClavos; i++) {
-            // Desviar aleatoriamente hacia la izquierda o la derecha
-            if (ThreadLocalRandom.current().nextBoolean()) {
-                posicion++; // Desviación a la derecha
-            } else {
-                posicion--; // Desviación a la izquierda
-            }
-        }
-        return Math.max(0, Math.min(numClavos, posicion)); // Limitar la posición dentro del rango
+        // Generar un valor con distribución normal centrado en el contenedor central (numClavos / 2)
+        double valor = ThreadLocalRandom.current().nextGaussian() * 2 + (numClavos / 2.0);
+
+        // Convertir el valor a una posición entera y limitar entre 0 y numClavos
+        int posicion = (int) Math.round(valor);
+        return Math.max(0, Math.min(numClavos, posicion));
     }
+
+
+
+
 
 
     public void mostrarDistribucion() {
