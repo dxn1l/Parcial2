@@ -1,4 +1,4 @@
-package com.example.Parcial2.entity;
+package com.example.Parcial2.Entity;
 
 import java.util.concurrent.BlockingQueue;
 

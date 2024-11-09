@@ -63,9 +63,9 @@ public class SimulationController {
         return "Configuración exitosa: " + numEstaciones + " estaciones.";
     }
     @GetMapping("/simulate")
-    public ResponseEntity<Map<Integer, Integer>> simulateAndGetDistribution(@RequestParam int numBolas) {
-        // Ejecuta la simulación con el número de bolas especificado por el usuario
-        distribucionService.simularCaidaDeBolas(numBolas);
+    public ResponseEntity<Map<Integer, Integer>> simulateAndGetDistribution() {
+        // Ejecutar la simulación para calcular la distribución
+        distribucionService.simularCaidaDeBolas(10000); // Ajusta el número de bolas según sea necesario
 
         // Obtener la distribución resultante
         Map<Integer, Integer> distributionData = distribucionService.obtenerDistribucion();

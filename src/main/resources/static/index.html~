@@ -10,12 +10,6 @@
 
 <label for="numEstaciones">Número de estaciones de trabajo:</label>
 <input type="number" id="numEstaciones" min="1" max="20" value="10">
-<br><br>
-
-<label for="numBolas">Número de bolas:</label>
-<input type="number" id="numBolas" min="100" max="10000" value="1000">
-<br><br>
-
 <button onclick="startSimulation()">Iniciar Simulación</button>
 
 <h2>Distribución Normal</h2>
@@ -24,15 +18,14 @@
 <script>
     function startSimulation() {
         const numEstaciones = document.getElementById('numEstaciones').value;
-        const numBolas = document.getElementById('numBolas').value;
 
         // Configura la simulación con el número de estaciones
         fetch(`/configureSimulation?numEstaciones=${numEstaciones}`, { method: 'POST' })
             .then(response => response.text())
             .then(data => console.log(data));
 
-        // Inicia la simulación con el número de bolas especificado y actualiza el gráfico
-        fetch(`/simulate?numBolas=${numBolas}`)
+        // Inicia la simulación y actualiza el gráfico
+        fetch('/simulate')
             .then(response => response.json())
             .then(data => updateChart(data));
     }
@@ -47,8 +40,6 @@
         const height = 300;
         const barWidth = width / chartData.length;
 
-        const maxCantidad = d3.max(chartData, d => d.cantidad);
-
         const svg = d3.select("#chart")
             .html("") // Limpiar contenido previo
             .append("svg")
@@ -56,7 +47,7 @@
             .attr("height", height);
 
         const yScale = d3.scaleLinear()
-            .domain([0, maxCantidad])
+            .domain([0, d3.max(chartData, d => d.cantidad)])
             .range([height, 0]);
 
         svg.selectAll("rect")

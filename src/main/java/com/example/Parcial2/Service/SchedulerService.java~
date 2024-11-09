@@ -1,6 +1,6 @@
 package com.example.Parcial2.Service;
 
-import com.example.Parcial2.Entity.EstacionDeTrabajo;
+import com.example.Parcial2.entity.EstacionDeTrabajo;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
