@@ -26,16 +26,24 @@
         const numEstaciones = document.getElementById('numEstaciones').value;
         const numBolas = document.getElementById('numBolas').value;
 
-        // Configura y lanza la simulación con los valores especificados
+        // Inicia la simulación en el backend
         fetch(`/startSimulation?numBolas=${numBolas}&numEstaciones=${numEstaciones}`)
             .then(response => response.text())
             .then(data => {
                 console.log(data); // Mensaje de confirmación en consola
 
-                // Llama al endpoint para obtener la distribución de la simulación
-                fetch('/simulate')
-                    .then(response => response.json())
-                    .then(data => updateChart(data));
+                // Conectar al stream de eventos en tiempo real
+                const eventSource = new EventSource(`/simulate/stream?numBolas=${numBolas}`);
+
+                eventSource.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    updateChart(data); // Actualiza la gráfica con cada evento recibido
+                };
+
+                eventSource.onerror = function() {
+                    console.log("Conexión finalizada.");
+                    eventSource.close(); // Cierra la conexión al completar la simulación o en caso de error
+                };
             });
     }
 

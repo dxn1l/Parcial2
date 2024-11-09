@@ -2,16 +2,15 @@ package com.example.Parcial2.controller;
 
 import com.example.Parcial2.Entity.EstacionDeTrabajo;
 import com.example.Parcial2.service.EnsamblajeService;
-import com.example.Parcial2.Service.DistribucionService;
-import org.springframework.http.ResponseEntity;
+import com.example.Parcial2.service.DistribucionService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 
@@ -23,7 +22,6 @@ public class SimulationController {
     private final DistribucionService distribucionService;
 
     private int numEstaciones = 10;
-
 
     public SimulationController(ExecutorService executorService, BlockingQueue<Integer> buffer, DistribucionService distribucionService) {
         this.executorService = executorService;
@@ -53,15 +51,12 @@ public class SimulationController {
         EnsamblajeService ensamblajeService = new EnsamblajeService(buffer);
         executorService.submit(ensamblajeService); // Ejecuta el hilo de la línea de ensamblaje
 
-        // Ejecutar la simulación de caída de bolas con el número especificado de bolas
+        // Ejecutar la simulación de caída de bolas sin transmisión en tiempo real
         distribucionService.simularCaidaDeBolas(numBolas);
 
         System.out.println("=== Simulación en curso... consulte la consola para los detalles de producción y ensamblaje ===");
         return "Simulación iniciada. Consulte la consola para ver los detalles.";
     }
-
-
-
 
     @PostMapping("/configureSimulation")
     public String configureSimulation(@RequestParam int numEstaciones) {
@@ -70,17 +65,18 @@ public class SimulationController {
         System.out.println("Número de estaciones configurado en: " + numEstaciones);
         return "Configuración exitosa: " + numEstaciones + " estaciones.";
     }
-    @GetMapping("/simulate")
-    public ResponseEntity<Map<Integer, Integer>> simulateAndGetDistribution() {
-        // Ejecutar la simulación para calcular la distribución
-        distribucionService.simularCaidaDeBolas(10000);
 
-        // Obtener la distribución resultante
-        Map<Integer, Integer> distributionData = distribucionService.obtenerDistribucion();
+    // Endpoint para iniciar la transmisión de la simulación en tiempo real
+    @GetMapping("/simulate/stream")
+    public SseEmitter streamSimulation(@RequestParam int numBolas) {
+        // Desactiva el tiempo de espera del SseEmitter
+        SseEmitter emitter = new SseEmitter(0L);
 
-        // Devolver la distribución en un formato JSON
-        return ResponseEntity.ok(distributionData);
+        // Iniciar la simulación en un hilo separado
+        new Thread(() -> distribucionService.simularCaidaDeBolasConActualizacion(numBolas, emitter)).start();
+
+        return emitter;
     }
+
+
 }
-
-
