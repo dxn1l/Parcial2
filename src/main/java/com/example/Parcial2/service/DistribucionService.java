@@ -1,4 +1,4 @@
-package com.example.Parcial2.service;
+/*package com.example.Parcial2.service;
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -89,4 +89,4 @@ public class DistribucionService {
         // Asegurarse de que la posición esté dentro de los límites válidos
         return Math.max(0, Math.min(numClavos, posicion));
     }
-}
+}*/

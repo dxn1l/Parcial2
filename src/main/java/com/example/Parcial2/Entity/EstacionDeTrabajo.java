@@ -1,32 +1,29 @@
 package com.example.Parcial2.Entity;
 
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 public class EstacionDeTrabajo implements Runnable {
-
     private final Long id;
-    private final BlockingQueue<Integer> buffer;
-    private final int componente;
+    private final BlockingQueue<DatoDistribucion> buffer;
+    private final List<DatoDistribucion> datosAsignados;
 
-    public EstacionDeTrabajo(Long id, BlockingQueue<Integer> buffer, int componente) {
+    public EstacionDeTrabajo(Long id, BlockingQueue<DatoDistribucion> buffer, List<DatoDistribucion> datosAsignados) {
         this.id = id;
         this.buffer = buffer;
-        this.componente = componente;
+        this.datosAsignados = datosAsignados;
     }
 
     @Override
     public void run() {
-        try {
-            System.out.println("Estación de trabajo " + id + " comenzando a producir componente: " + componente);
-            Thread.sleep(500); // Simula tiempo de producción
-            System.out.println("Estación de trabajo " + id + " produjo el componente: " + componente);
-
-            System.out.println("Estación de trabajo " + id + " intentando colocar el componente en el buffer...");
-            buffer.put(componente); // Coloca el componente en el buffer
-            System.out.println("Estación de trabajo " + id + " ha colocado el componente " + componente + " en el buffer.");
-        } catch (InterruptedException e) {
-            System.out.println("Estación de trabajo " + id + " fue interrumpida.");
-            Thread.currentThread().interrupt();
+        for (DatoDistribucion dato : datosAsignados) {
+            try {
+                buffer.put(dato);
+                Thread.sleep(200); // Ajusta para ralentizar la producción
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
     }
 }

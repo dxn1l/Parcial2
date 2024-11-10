@@ -1,5 +1,6 @@
 package com.example.Parcial2.config;
 
+import com.example.Parcial2.Entity.DatoDistribucion;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,26 +10,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Configuration
-public class SimulationConfig {
+public class AppConfig {
 
     @Bean
-    public int numEstaciones() {
-        return 10; // Número de estaciones de trabajo
-    }
-
-    @Bean
-    public int tamañoBuffer() {
-        return 10; // Tamaño del buffer compartido
+    public BlockingQueue<DatoDistribucion> buffer() {
+        return new ArrayBlockingQueue<>(100); // Tamaño de la cola ajustable
     }
 
     @Bean
     public ExecutorService executorService() {
-        return Executors.newFixedThreadPool(numEstaciones());
-    }
-
-    @Bean
-    public BlockingQueue<Integer> buffer() {
-        return new ArrayBlockingQueue<>(tamañoBuffer());
+        return Executors.newFixedThreadPool(10); // Número de hilos ajustable
     }
 }
-

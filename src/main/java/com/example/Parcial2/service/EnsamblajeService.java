@@ -1,32 +1,41 @@
 package com.example.Parcial2.service;
 
+import com.example.Parcial2.Entity.DatoDistribucion;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 import java.util.concurrent.BlockingQueue;
 
 public class EnsamblajeService implements Runnable {
+    private final BlockingQueue<DatoDistribucion> buffer;
+    private final SseEmitter emitter;
 
-    private final BlockingQueue<Integer> buffer;
-
-    public EnsamblajeService(BlockingQueue<Integer> buffer) {
+    public EnsamblajeService(BlockingQueue<DatoDistribucion> buffer, SseEmitter emitter) {
         this.buffer = buffer;
+        this.emitter = emitter;
     }
 
     @Override
     public void run() {
         try {
             while (true) {
-                System.out.println("Línea de ensamblaje esperando componente del buffer...");
-                Integer componente = buffer.take(); // Toma un componente del buffer
-                System.out.println("Línea de ensamblaje ha tomado el componente: " + componente);
-
-                // Simula el tiempo de ensamblaje
-                Thread.sleep(1000);
-                System.out.println("Línea de ensamblaje ha ensamblado el componente: " + componente);
+                DatoDistribucion dato = buffer.take();
+                emitter.send(dato);
             }
-        } catch (InterruptedException e) {
-            System.out.println("Línea de ensamblaje fue interrumpida.");
-            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            emitter.completeWithError(e);
+        }
+    }
+
+    public void procesarGradual(long delay) throws InterruptedException {
+        try {
+            while (!buffer.isEmpty()) {
+                DatoDistribucion dato = buffer.take();
+                emitter.send(dato);
+                Thread.sleep(delay);
+            }
+            emitter.complete();
+        } catch (Exception e) {
+            emitter.completeWithError(e);
         }
     }
 }
-
-
