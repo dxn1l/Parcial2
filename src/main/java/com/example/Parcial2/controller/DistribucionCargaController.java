@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 
@@ -32,16 +34,13 @@ public class DistribucionCargaController {
     }
 
     @GetMapping("/cargarDatosCSV")
-    public ResponseEntity<String> cargarDatosDesdeCSV(@RequestParam String filePath) {
-        try {
-            // Cargar los datos desde el archivo CSV a la base de datos
-            distribucionDataService.cargarDatosDesdeCSV(filePath);
-            return ResponseEntity.ok("Datos cargados exitosamente en la base de datos.");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al cargar los datos desde el CSV.");
-        }
+    public ResponseEntity<Map<String, String>> cargarDatosDesdeCSV(@RequestParam String filePath) throws IOException {
+        distribucionDataService.cargarDatosDesdeCSV(filePath);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Datos cargados exitosamente desde el CSV");
+        return ResponseEntity.ok(response);
     }
+
 
 
 

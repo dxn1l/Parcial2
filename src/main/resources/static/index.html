@@ -78,15 +78,17 @@
         const filePath = document.getElementById('filePath').value;
 
         fetch(`/cargarDatosCSV?filePath=${filePath}`)
-            .then(response => response.json())
+            .then(response => response.json())  // Procesar la respuesta como JSON
             .then(data => {
-                document.getElementById("resultado").innerText = "Datos cargados desde el CSV a la base de datos.";
+                console.log("Datos cargados en la base de datos:", data.message);
+                document.getElementById("resultado").innerText = data.message;
             })
             .catch(error => {
                 console.error("Error al cargar datos desde el CSV:", error);
                 document.getElementById("resultado").innerText = "Error al cargar datos desde el CSV.";
             });
     }
+
 
     function startGradualChartFormation() {
         const delay = document.getElementById('delay').value;
