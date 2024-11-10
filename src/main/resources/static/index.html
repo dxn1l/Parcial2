@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Simulación de Fábrica - Distribución Normal</title>
+    <title>Maquina de Galton</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <style>
         /* Estilos para el layout y la consola */
@@ -24,17 +24,44 @@
     </style>
 </head>
 <body>
-<h1>Simulación de Fábrica - Distribución Normal</h1>
+<h1>Máquina de Galton</h1>
 
+<!-- Formulario para generar el archivo CSV con distribución normal -->
+<h2>Generar CSV</h2>
+<h3>Configuración recomendada para que genere distribución normal: Media=5 , Desviación Estandar=2</h3>
+<label for="numDatos">Número de bolas:</label>
+<input type="number" id="numDatos" value="1000">
+<br>
+
+<label for="media">Media:</label>
+<input type="number" id="media" value="5">
+<br>
+
+<label for="desviacionEstandar">Desviación Estándar:</label>
+<input type="number" id="desviacionEstandar" value="2">
+<br>
+
+<button onclick="generarYGuardarCSV()">Generar y Guardar CSV en Base de Datos</button>
+<p id="resultado"></p> <!-- Mensaje de resultado -->
+
+<!-- Sección para cargar datos desde CSV existente y visualizar datos de la base de datos -->
+<h2>Cargar Datos a la BD</h2>
+<label for="filePath">Ruta del archivo CSV:</label>
+<input type="text" id="filePath" value="src/main/resources/distribucion_normal.csv">
+<br>
+<button onclick="cargarDatosCSV()">Cargar Datos</button>
+
+<!-- Sección de Simulación -->
+<h2>Generar grafica a partir de los datos de la BD</h2>
 <label for="numEstaciones">Número de estaciones de trabajo:</label>
 <input type="number" id="numEstaciones" min="1" max="20" value="10">
 <br><br>
 
-<label for="numBolas">Número de bolas:</label>
-<input type="number" id="numBolas" min="100" max="10000" value="1000">
+<label for="delay">Intervalo de tiempo (ms) entre actualizaciones:</label>
+<input type="number" id="delay" value="100">
 <br><br>
 
-<button onclick="startSimulation()">Iniciar Simulación</button>
+<button onclick="startGradualChartFormation()">Iniciar tablero Galton</button>
 
 <div id="layout">
     <div id="chart"></div>
@@ -42,34 +69,61 @@
 </div>
 
 <script>
-    function startSimulation() {
-        const numEstaciones = document.getElementById('numEstaciones').value;
-        const numBolas = document.getElementById('numBolas').value;
+    // Función para llamar al endpoint que genera el CSV y guarda los datos en la base de datos
+    function generarYGuardarCSV() {
+        const numDatos = document.getElementById('numDatos').value;
+        const media = document.getElementById('media').value;
+        const desviacionEstandar = document.getElementById('desviacionEstandar').value;
+        const filePath = 'src/main/resources/distribucion_normal.csv';
 
-        fetch(`/startSimulation?numBolas=${numBolas}&numEstaciones=${numEstaciones}`)
+        fetch(`/generarCSV?filePath=${filePath}&numDatos=${numDatos}&media=${media}&desviacionEstandar=${desviacionEstandar}`)
             .then(response => response.text())
             .then(data => {
-                console.log(data);
-
-                const eventSource = new EventSource(`/simulate/stream?numBolas=${numBolas}`);
-
-                eventSource.onmessage = function(event) {
-                    const receivedData = JSON.parse(event.data);
-                    const contenedores = receivedData.contenedores;
-                    const mensaje = receivedData.mensaje;
-
-                    // Actualizar el gráfico
-                    updateChart(contenedores);
-
-                    // Mostrar el mensaje en la "consola"
-                    addConsoleMessage(mensaje);
-                };
-
-                eventSource.onerror = function() {
-                    console.log("Conexión cerrada");
-                    eventSource.close();
-                };
+                document.getElementById("resultado").innerText = data;
+            })
+            .catch(error => {
+                console.error("Error al generar y guardar el CSV:", error);
+                document.getElementById("resultado").innerText = "Error al generar y guardar el CSV.";
             });
+    }
+
+    // Función para cargar los datos desde un CSV existente a la base de datos
+    function cargarDatosCSV() {
+        const filePath = document.getElementById('filePath').value;
+
+        fetch(`/cargarDatosCSV?filePath=${filePath}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("Datos cargados en la base de datos:", data);
+                document.getElementById("resultado").innerText = "Datos cargados desde el CSV a la base de datos.";
+            })
+            .catch(error => {
+                console.error("Error al cargar datos desde el CSV:", error);
+                document.getElementById("resultado").innerText = "Error al cargar datos desde el CSV.";
+            });
+    }
+
+    // Función para iniciar la formación gradual de la gráfica
+    function startGradualChartFormation() {
+        const delay = document.getElementById('delay').value;
+
+        const eventSource = new EventSource(`/obtenerDatosGradual?delay=${delay}`);
+        const chartData = [];
+
+        eventSource.onmessage = function(event) {
+            const dato = JSON.parse(event.data);
+
+            if (dato.posicion !== undefined && dato.cantidad !== undefined) {
+                chartData.push(dato);
+                updateChart(chartData);
+                addConsoleMessage(`Añadida Bola en la posición: ${dato.posicion}`);
+            }
+        };
+
+        eventSource.onerror = function() {
+            console.log("Conexión cerrada o error en el SSE");
+            eventSource.close();
+        };
     }
 
     function addConsoleMessage(message) {
@@ -77,20 +131,29 @@
         const messageElement = document.createElement("div");
         messageElement.textContent = message;
         consoleElement.appendChild(messageElement);
-
-        // Desplazar hacia abajo automáticamente para mostrar el último mensaje
         consoleElement.scrollTop = consoleElement.scrollHeight;
     }
 
-    function updateChart(contenedores) {
-        const chartData = Object.entries(contenedores).map(([key, value]) => ({
-            posicion: +key,
-            cantidad: +value
+    function updateChart(data) {
+        const posiciones = Array.from({ length: 10 }, () => 0);
+
+        data.forEach(dato => {
+            const posicion = dato.posicion;
+            const cantidad = dato.cantidad;
+
+            if (posicion >= 0 && posicion < 10) {
+                posiciones[posicion] += cantidad;
+            }
+        });
+
+        const chartData = posiciones.map((cantidad, posicion) => ({
+            posicion: posicion,
+            cantidad: cantidad
         }));
 
-        const width = 500;
-        const height = 300;
-        const barWidth = width / chartData.length;
+        const width = 800;
+        const height = 400;
+        const barWidth = Math.max(width / chartData.length, 1);
 
         const maxCantidad = d3.max(chartData, d => d.cantidad);
 
@@ -101,7 +164,7 @@
             .attr("height", height);
 
         const yScale = d3.scaleLinear()
-            .domain([0, maxCantidad])
+            .domain([0, maxCantidad || 1])
             .range([height, 0]);
 
         svg.selectAll("rect")
@@ -122,7 +185,8 @@
             .attr("x", (d, i) => i * barWidth + (barWidth / 2))
             .attr("y", d => yScale(d.cantidad) - 5)
             .attr("text-anchor", "middle")
-            .attr("fill", "black");
+            .attr("fill", "black")
+            .attr("font-size", "10px");
     }
 </script>
 
