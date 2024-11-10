@@ -14,7 +14,7 @@ public class AppConfig {
 
     @Bean
     public BlockingQueue<DatoDistribucion> buffer() {
-        return new ArrayBlockingQueue<>(100); // Tamaño de la cola ajustable
+        return new ArrayBlockingQueue<>(1000); // Tamaño de la cola ajustable
     }
 
     @Bean

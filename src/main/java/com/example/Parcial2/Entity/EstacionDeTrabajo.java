@@ -6,24 +6,25 @@ import java.util.concurrent.BlockingQueue;
 public class EstacionDeTrabajo implements Runnable {
     private final Long id;
     private final BlockingQueue<DatoDistribucion> buffer;
-    private final List<DatoDistribucion> datosAsignados;
+    private final List<DatoDistribucion> datosCSV;
 
-    public EstacionDeTrabajo(Long id, BlockingQueue<DatoDistribucion> buffer, List<DatoDistribucion> datosAsignados) {
+    public EstacionDeTrabajo(Long id, BlockingQueue<DatoDistribucion> buffer, List<DatoDistribucion> datosCSV) {
         this.id = id;
         this.buffer = buffer;
-        this.datosAsignados = datosAsignados;
+        this.datosCSV = datosCSV;
     }
 
     @Override
     public void run() {
-        for (DatoDistribucion dato : datosAsignados) {
+        datosCSV.forEach(dato -> {
             try {
-                buffer.put(dato);
-                Thread.sleep(200); // Ajusta para ralentizar la producción
+                buffer.put(dato); // Añadir el dato del CSV al buffer directamente
+                System.out.println("Estación " + id + " produjo dato: " + dato);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                break;
             }
-        }
+        });
     }
 }
+
+
