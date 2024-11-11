@@ -1,16 +1,15 @@
 package com.example.Parcial2.config;
 
+import com.example.Parcial2.service.EnsamblajeService;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.listener.MessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.amqp.core.QueueBuilder;
-
 
 @Configuration
 public class RabbitMQConfig {
@@ -19,9 +18,7 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue queue() {
-        return QueueBuilder.durable(QUEUE_NAME)
-                .maxLength(2000) // Ajusta el tamaño máximo de la cola aquí
-                .build();
+        return QueueBuilder.durable(QUEUE_NAME).build();
     }
 
     @Bean
@@ -37,21 +34,23 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public MessageListenerAdapter messageListenerAdapter() {
-        // Configura el adaptador de escucha para usar JSON
-        return new MessageListenerAdapter(new RabbitMQListener(), jsonMessageConverter());
+    public MessageListenerAdapter messageListenerAdapter(EnsamblajeService ensamblajeService) {
+        MessageListenerAdapter adapter = new MessageListenerAdapter(ensamblajeService, "recibirDatoDesdeRabbitMQ");
+        adapter.setMessageConverter(jsonMessageConverter()); // Configura el adaptador con el convertidor JSON
+        return adapter;
     }
 
     @Bean
-    public MessageListenerContainer messageListenerContainer(ConnectionFactory connectionFactory,
-                                                             MessageListenerAdapter messageListenerAdapter) {
+    public SimpleMessageListenerContainer messageListenerContainer(ConnectionFactory connectionFactory,
+                                                                   MessageListenerAdapter messageListenerAdapter) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.setQueueNames(QUEUE_NAME);
-        container.setMessageListener(messageListenerAdapter); // Usa el adaptador configurado
+        container.setMessageListener(messageListenerAdapter); // Usa el adaptador con el convertidor JSON configurado
         return container;
     }
 }
+
 
 
 
