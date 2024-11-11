@@ -29,7 +29,10 @@ public class DistribucionDataService {
 
 
     public List<DatoDistribucion> obtenerDatos() {
-        return repository.findAll();
+        List<DatoDistribucion> datos = repository.findAll();
+        System.out.println("Total de datos obtenidos de la base de datos: " + datos.size());
+        return datos;
+        //return repository.findAll();
     }
 
 

@@ -1,41 +1,33 @@
 package com.example.Parcial2.service;
 
 import com.example.Parcial2.Entity.DatoDistribucion;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.concurrent.BlockingQueue;
+@Service
+public class EnsamblajeService {
 
-public class EnsamblajeService implements Runnable {
-    private final BlockingQueue<DatoDistribucion> buffer;
-    private final SseEmitter emitter;
+    private SseEmitter emitter;
+    private int processedMessages = 0;
 
-    public EnsamblajeService(BlockingQueue<DatoDistribucion> buffer, SseEmitter emitter) {
-        this.buffer = buffer;
+    public void setEmitter(SseEmitter emitter) {
         this.emitter = emitter;
+
     }
 
-    @Override
-    public void run() {
-        try {
-            while (true) {
-                DatoDistribucion dato = buffer.take();
+    @RabbitListener(queues = "queue_name")
+    public void recibirDatoDesdeRabbitMQ(DatoDistribucion dato) {
+        if (emitter != null) {
+            try {
+                Thread.sleep(50);
                 emitter.send(dato);
+                processedMessages++;
+                System.out.println("RabbitListener Ensamblaje envió dato al frontend: " + dato + " (Total procesados: " + processedMessages + ")");
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+                System.err.println("Error enviando dato al frontend: " + e.getMessage());
             }
-        } catch (Exception e) {
-            emitter.completeWithError(e);
-        }
-    }
-
-    public void procesarGradual(long delay) throws InterruptedException {
-        try {
-            while (!buffer.isEmpty()) {
-                DatoDistribucion dato = buffer.take();
-                emitter.send(dato);
-                Thread.sleep(delay);
-            }
-            emitter.complete();
-        } catch (Exception e) {
-            emitter.completeWithError(e);
         }
     }
 }

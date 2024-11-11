@@ -1,4 +1,4 @@
-package com.example.Parcial2.service;
+/*package com.example.Parcial2.service;
 
 
 import com.example.Parcial2.Entity.EstacionDeTrabajo;
@@ -15,5 +15,5 @@ public class SchedulerService {
                 .flatMap(EstacionDeTrabajo::procesarDatos) // `procesar()` es el método de procesamiento reactivo en EstacionDeTrabajo
                 .subscribe(); // Inicia la ejecución reactiva
     }
-}
+}*/
 

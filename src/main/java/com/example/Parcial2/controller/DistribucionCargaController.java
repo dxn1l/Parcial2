@@ -20,19 +20,22 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+
 @RestController
 public class DistribucionCargaController {
 
     private final DistribucionDataService distribucionDataService;
-    private final BlockingQueue<DatoDistribucion> buffer;
-    private final ExecutorService executorService;
-    private final int numEstaciones = 10; // Número predeterminado de estaciones de trabajo
+    private final RabbitTemplate rabbitTemplate;
+    private final EnsamblajeService ensamblajeService;
+    private final int numEstaciones = 10;
 
-    public DistribucionCargaController(DistribucionDataService distribucionDataService, BlockingQueue<DatoDistribucion> buffer,
-                                       ExecutorService executorService) {
+    public DistribucionCargaController(DistribucionDataService distribucionDataService,
+                                       RabbitTemplate rabbitTemplate,
+                                       EnsamblajeService ensamblajeService) {
         this.distribucionDataService = distribucionDataService;
-        this.buffer = buffer;
-        this.executorService = executorService;
+        this.rabbitTemplate = rabbitTemplate;
+        this.ensamblajeService = ensamblajeService;
     }
 
     @GetMapping("/cargarDatosCSV")
@@ -47,41 +50,24 @@ public class DistribucionCargaController {
 
 
     @GetMapping("/obtenerDatosGradual")
-    public SseEmitter obtenerDatosGradual(@RequestParam int delay) {
-        SseEmitter emitter = new SseEmitter(0L); // Desactiva el tiempo de espera
-        List<DatoDistribucion> datos = distribucionDataService.obtenerDatos();
-        int numDatosPorEstacion = datos.size() / numEstaciones;
+public SseEmitter obtenerDatosGradual(@RequestParam int delay) {
+    SseEmitter emitter = new SseEmitter(0L);  // Desactiva el tiempo de espera
+    ensamblajeService.setEmitter(emitter);
 
-        // Crear un Flux para cada estación dividiendo los datos
-        Flux<DatoDistribucion> flujoEstaciones = Flux.empty();
+    List<DatoDistribucion> datos = distribucionDataService.obtenerDatos();
+    int numDatosPorEstacion = (int) Math.ceil((double) datos.size() / numEstaciones);
 
-        for (int i = 0; i < numEstaciones; i++) {
-            int start = i * numDatosPorEstacion;
-            int end = (i == numEstaciones - 1) ? datos.size() : start + numDatosPorEstacion;
+    for (int i = 0; i < numEstaciones; i++) {
+        int start = i * numDatosPorEstacion;
+        int end = Math.min(start + numDatosPorEstacion, datos.size());
+        if (start < datos.size()) {
             List<DatoDistribucion> subListaDatos = datos.subList(start, end);
-
-            EstacionDeTrabajo estacion = new EstacionDeTrabajo((long) i, buffer, subListaDatos);
-
-            // Agregar el flujo de cada estación al flujo combinado
-            flujoEstaciones = flujoEstaciones.mergeWith(estacion.procesarDatos());
+            EstacionDeTrabajo estacion = new EstacionDeTrabajo((long) i, subListaDatos, rabbitTemplate);
+            estacion.procesarDatosConRabbitMQ(delay);  // Enviar datos a RabbitMQ en lugar del buffer
         }
-
-        // Procesar el flujo combinado y enviar datos al frontend
-        flujoEstaciones
-                .delayElements(Duration.ofMillis(delay)) // Controla la velocidad de emisión
-                .doOnNext(dato -> {
-                    try {
-                        emitter.send(dato);
-                    } catch (IOException e) {
-                        emitter.completeWithError(e);
-                    }
-                })
-                .doOnComplete(emitter::complete)
-                .subscribe();
-
-        return emitter;
     }
 
-
+    return emitter;
+}
 
 }

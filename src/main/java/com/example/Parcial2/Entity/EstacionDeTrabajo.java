@@ -1,35 +1,32 @@
 package com.example.Parcial2.Entity;
 
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
+import com.example.Parcial2.config.RabbitMQConfig;
+import com.example.Parcial2.Entity.DatoDistribucion;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import reactor.core.publisher.Flux;
 import java.time.Duration;
+import java.util.List;
 
 public class EstacionDeTrabajo {
     private final Long id;
-    private final BlockingQueue<DatoDistribucion> buffer;
     private final List<DatoDistribucion> datosCSV;
+    private final RabbitTemplate rabbitTemplate;
 
-    public EstacionDeTrabajo(Long id, BlockingQueue<DatoDistribucion> buffer, List<DatoDistribucion> datosCSV) {
+    public EstacionDeTrabajo(Long id, List<DatoDistribucion> datosCSV, RabbitTemplate rabbitTemplate) {
         this.id = id;
-        this.buffer = buffer;
         this.datosCSV = datosCSV;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
-    // Método que devuelve un Flux para emitir los datos de forma reactiva
-    public Flux<DatoDistribucion> procesarDatos() {
-        return Flux.fromIterable(datosCSV)
-                .delayElements(Duration.ofMillis(100)) // Ajusta el retraso según sea necesario
+    public void procesarDatosConRabbitMQ(int delay) {
+        Flux.fromIterable(datosCSV)
+                .delayElements(Duration.ofMillis(delay))
                 .doOnNext(dato -> {
-                    try {
-                        buffer.put(dato);
-                        System.out.println("Estación " + id + " procesó dato: " + dato);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                });
+                    rabbitTemplate.convertAndSend("queue_name", dato);
+                    System.out.println("Estación " + id + " envió dato a la cola de RabbitMQ: " + dato);
+                })
+                .doOnComplete(() -> System.out.println("Estación " + id + " completó el envío de todos los datos"))
+                .subscribe();
     }
+
 }
-
-
-
