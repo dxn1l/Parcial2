@@ -2,8 +2,10 @@ package com.example.Parcial2.Entity;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import reactor.core.publisher.Flux;
+import java.time.Duration;
 
-public class EstacionDeTrabajo implements Runnable {
+public class EstacionDeTrabajo {
     private final Long id;
     private final BlockingQueue<DatoDistribucion> buffer;
     private final List<DatoDistribucion> datosCSV;
@@ -14,17 +16,20 @@ public class EstacionDeTrabajo implements Runnable {
         this.datosCSV = datosCSV;
     }
 
-    @Override
-    public void run() {
-        datosCSV.forEach(dato -> {
-            try {
-                buffer.put(dato); // Añadir el dato del CSV al buffer directamente
-                System.out.println("Estación " + id + " produjo dato: " + dato);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
+    // Método que devuelve un Flux para emitir los datos de forma reactiva
+    public Flux<DatoDistribucion> procesarDatos() {
+        return Flux.fromIterable(datosCSV)
+                .delayElements(Duration.ofMillis(100)) // Ajusta el retraso según sea necesario
+                .doOnNext(dato -> {
+                    try {
+                        buffer.put(dato);
+                        System.out.println("Estación " + id + " procesó dato: " + dato);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                });
     }
 }
+
 
 

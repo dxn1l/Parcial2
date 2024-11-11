@@ -1,21 +1,19 @@
-package com.example.Parcial2.Service;
+package com.example.Parcial2.service;
+
 
 import com.example.Parcial2.Entity.EstacionDeTrabajo;
+import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 public class SchedulerService {
 
-    private final ExecutorService executorService;
-
-    public SchedulerService(ExecutorService executorService) {
-        this.executorService = executorService;
-    }
-
     public void scheduleTasks(List<EstacionDeTrabajo> estaciones) {
-        for (EstacionDeTrabajo estacion : estaciones) {
-            executorService.submit(estacion); // Ejecuta en orden
-        }
+        Flux.fromIterable(estaciones)
+                .delayElements(Duration.ofMillis(100)) // Controla la frecuencia de ejecución de cada estación
+                .flatMap(EstacionDeTrabajo::procesarDatos) // `procesar()` es el método de procesamiento reactivo en EstacionDeTrabajo
+                .subscribe(); // Inicia la ejecución reactiva
     }
 }
+

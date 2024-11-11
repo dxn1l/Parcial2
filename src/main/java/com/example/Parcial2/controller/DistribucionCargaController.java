@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,33 +48,40 @@ public class DistribucionCargaController {
 
     @GetMapping("/obtenerDatosGradual")
     public SseEmitter obtenerDatosGradual(@RequestParam int delay) {
-        SseEmitter emitter = new SseEmitter(0L);  // Desactiva el tiempo de espera
+        SseEmitter emitter = new SseEmitter(0L); // Desactiva el tiempo de espera
         List<DatoDistribucion> datos = distribucionDataService.obtenerDatos();
         int numDatosPorEstacion = datos.size() / numEstaciones;
 
-        // Dividir los datos en partes para cada estación y procesarlos
+        // Crear un Flux para cada estación dividiendo los datos
+        Flux<DatoDistribucion> flujoEstaciones = Flux.empty();
+
         for (int i = 0; i < numEstaciones; i++) {
             int start = i * numDatosPorEstacion;
             int end = (i == numEstaciones - 1) ? datos.size() : start + numDatosPorEstacion;
             List<DatoDistribucion> subListaDatos = datos.subList(start, end);
 
             EstacionDeTrabajo estacion = new EstacionDeTrabajo((long) i, buffer, subListaDatos);
-            executorService.submit(estacion);
+
+            // Agregar el flujo de cada estación al flujo combinado
+            flujoEstaciones = flujoEstaciones.mergeWith(estacion.procesarDatos());
         }
 
-        // Crear y lanzar el hilo del ensamblaje para enviar los datos al frontend de forma gradual
-        executorService.submit(() -> {
-            try {
-                EnsamblajeService ensamblaje = new EnsamblajeService(buffer, emitter);
-                ensamblaje.procesarGradual(delay);
-                emitter.complete();
-            } catch (Exception e) {
-                emitter.completeWithError(e);
-            }
-        });
+        // Procesar el flujo combinado y enviar datos al frontend
+        flujoEstaciones
+                .delayElements(Duration.ofMillis(delay)) // Controla la velocidad de emisión
+                .doOnNext(dato -> {
+                    try {
+                        emitter.send(dato);
+                    } catch (IOException e) {
+                        emitter.completeWithError(e);
+                    }
+                })
+                .doOnComplete(emitter::complete)
+                .subscribe();
 
         return emitter;
     }
+
 
 
 }
