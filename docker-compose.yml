@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: gauss_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: gauss_database
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    ports:
+      - "3301:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - gauss_network
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - gauss_network
+
+volumes:
+  mysql_data:
+
+networks:
+  gauss_network:
+    driver: bridge

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Máquina de Galton</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        #layout {
+            display: flex;
+        }
+        #chart {
+            width: 70%;
+        }
+        #console {
+            width: 30%;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #222;
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+<h1>Máquina de Galton</h1>
+
+<h2>Generar y Guardar CSV con Distribución Normal</h2>
+<p>Configuración recomendada para distribución normal: Media=5, Desviación Estándar=2</p>
+<label for="numDatos">Número de bolas:</label>
+<input type="number" id="numDatos" value="1000">
+<br>
+<label for="media">Media:</label>
+<input type="number" id="media" value="5">
+<br>
+<label for="desviacionEstandar">Desviación Estándar:</label>
+<input type="number" id="desviacionEstandar" value="2">
+<br>
+<button onclick="generarYGuardarCSV()">Generar y Guardar CSV</button>
+<p id="resultado"></p>
+
+<h2>Cargar Datos desde CSV a la Base de Datos</h2>
+<label for="filePath">Ruta del archivo CSV:</label>
+<input type="text" id="filePath" value="src/main/resources/distribucion_normal.csv">
+<br>
+<button onclick="cargarDatosCSV()">Cargar Datos(puede tardar unos segundos)</button>
+
+<h2>Visualizar Tablero de Galton (10 fabricas)</h2>
+<label for="delay">Intervalo de tiempo (ms) entre actualizaciones:</label>
+<input type="number" id="delay" value="100">
+<br>
+<button onclick="startGradualChartFormation()">Iniciar Visualización Gradual</button>
+
+<div id="layout">
+    <div id="chart"></div>
+    <div id="console"></div>
+</div>
+
+<script>
+    function generarYGuardarCSV() {
+        const numDatos = document.getElementById('numDatos').value;
+        const media = document.getElementById('media').value;
+        const desviacionEstandar = document.getElementById('desviacionEstandar').value;
+        const filePath = 'src/main/resources/distribucion_normal.csv';
+
+        fetch(`/generarCSV?filePath=${filePath}&numDatos=${numDatos}&media=${media}&desviacionEstandar=${desviacionEstandar}`)
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("resultado").innerText = data;
+            })
+            .catch(error => {
+                console.error("Error al generar y guardar el CSV:", error);
+                document.getElementById("resultado").innerText = "Error al generar y guardar el CSV.";
+            });
+    }
+
+    function cargarDatosCSV() {
+        const filePath = document.getElementById('filePath').value;
+
+        fetch(`/cargarDatosCSV?filePath=${filePath}`)
+            .then(response => response.json())  // Procesar la respuesta como JSON
+            .then(data => {
+                console.log("Datos cargados en la base de datos:", data.message);
+                document.getElementById("resultado").innerText = data.message;
+            })
+            .catch(error => {
+                console.error("Error al cargar datos desde el CSV:", error);
+                document.getElementById("resultado").innerText = "Error al cargar datos desde el CSV.";
+            });
+    }
+
+
+    function startGradualChartFormation() {
+        const delay = document.getElementById('delay').value;
+        const eventSource = new EventSource(`/obtenerDatosGradual?delay=${delay}`);
+        const chartData = [];
+
+        eventSource.onmessage = function(event) {
+            const dato = JSON.parse(event.data);
+            if (dato.posicion !== undefined && dato.cantidad !== undefined) {
+                chartData.push(dato);
+                updateChart(chartData);
+                addConsoleMessage(`Añadida Bola en la posición: ${dato.posicion}`);
+            }
+        };
+
+        eventSource.onerror = function() {
+            console.log("Conexión cerrada o error en el SSE");
+            eventSource.close();
+        };
+    }
+
+
+    function addConsoleMessage(message) {
+        const consoleElement = document.getElementById("console");
+        const messageElement = document.createElement("div");
+        messageElement.textContent = message;
+        consoleElement.appendChild(messageElement);
+        consoleElement.scrollTop = consoleElement.scrollHeight;
+    }
+
+    function updateChart(data) {
+        const posiciones = Array.from({ length: 10 }, () => 0);
+
+        data.forEach(dato => {
+            const posicion = dato.posicion;
+            const cantidad = dato.cantidad;
+
+            if (posicion >= 0 && posicion < 10) {
+                posiciones[posicion] += cantidad;
+            }
+        });
+
+        const chartData = posiciones.map((cantidad, posicion) => ({
+            posicion: posicion,
+            cantidad: cantidad
+        }));
+
+        const width = 800;
+        const height = 400;
+        const barWidth = Math.max(width / chartData.length, 1);
+
+        const maxCantidad = d3.max(chartData, d => d.cantidad);
+
+        const svg = d3.select("#chart")
+            .html("")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        const yScale = d3.scaleLinear()
+            .domain([0, maxCantidad || 1])
+            .range([height, 0]);
+
+        svg.selectAll("rect")
+            .data(chartData)
+            .enter()
+            .append("rect")
+            .attr("x", (d, i) => i * barWidth)
+            .attr("y", d => yScale(d.cantidad))
+            .attr("width", barWidth - 2)
+            .attr("height", d => height - yScale(d.cantidad))
+            .attr("fill", "steelblue");
+
+        svg.selectAll("text")
+            .data(chartData)
+            .enter()
+            .append("text")
+            .text(d => d.cantidad)
+            .attr("x", (d, i) => i * barWidth + (barWidth / 2))
+            .attr("y", d => yScale(d.cantidad) - 5)
+            .attr("text-anchor", "middle")
+            .attr("fill", "black")
+            .attr("font-size", "10px");
+    }
+</script>
+
+</body>
+</html>
