@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 
+
 @Service
 public class DistribucionDataService {
 
@@ -28,20 +29,11 @@ public class DistribucionDataService {
 
 
     public List<DatoDistribucion> obtenerDatos() {
-        return repository.findAll();
-    }
-
-    public List<DatoDistribucion> obtenerDatosAgrupados() {
         List<DatoDistribucion> datos = repository.findAll();
-
-        // Agrupar datos por posición y sumar las cantidades
-        Map<Integer, Integer> datosAgrupados = datos.stream()
-                .collect(Collectors.groupingBy(DatoDistribucion::getPosicion,
-                        Collectors.summingInt(DatoDistribucion::getCantidad)));
-
-        // Convertir el mapa agrupado en una lista de DatoDistribucion
-        return datosAgrupados.entrySet().stream()
-                .map(entry -> new DatoDistribucion(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList());
+        System.out.println("Total de datos obtenidos de la base de datos: " + datos.size());
+        return datos;
+        //return repository.findAll();
     }
+
+
 }

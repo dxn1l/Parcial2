@@ -93,13 +93,22 @@
     function startGradualChartFormation() {
         const delay = document.getElementById('delay').value;
         const eventSource = new EventSource(`/obtenerDatosGradual?delay=${delay}`);
-        const chartData = [];
+
+        const chartData = new Map(); // Utilizamos un Map para consolidar los datos por posición
 
         eventSource.onmessage = function(event) {
             const dato = JSON.parse(event.data);
+
             if (dato.posicion !== undefined && dato.cantidad !== undefined) {
-                chartData.push(dato);
-                updateChart(chartData);
+                // Actualizar la cantidad en la posición especificada
+                if (chartData.has(dato.posicion)) {
+                    chartData.set(dato.posicion, chartData.get(dato.posicion) + dato.cantidad);
+                } else {
+                    chartData.set(dato.posicion, dato.cantidad);
+                }
+
+                updateChart(Array.from(chartData.entries()).map(([posicion, cantidad]) => ({ posicion, cantidad })));
+
                 addConsoleMessage(`Añadida Bola en la posición: ${dato.posicion}`);
             }
         };

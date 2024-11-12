@@ -1,4 +1,4 @@
-package com.example.Parcial2.config;
+/*package com.example.Parcial2.config;
 
 import com.example.Parcial2.Entity.DatoDistribucion;
 import org.springframework.context.annotation.Bean;
@@ -21,4 +21,4 @@ public class AppConfig {
     public ExecutorService executorService() {
         return Executors.newFixedThreadPool(10); // Número de hilos ajustable
     }
-}
+}*/
