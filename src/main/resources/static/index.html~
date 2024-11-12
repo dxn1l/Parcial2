@@ -10,6 +10,8 @@
             padding: 0;
             height: 100%;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         #main-container {
             display: flex;
@@ -20,22 +22,33 @@
         #content {
             flex: 1;
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            flex-direction: row;
             padding: 20px;
         }
-        #layout {
+        #controls {
+            flex: 30%;
+            display : flex;
+            flex-direction: column;
+        }
+        #chart-container {
+            flex : 70%;
             display: flex;
-            width: 100%;
-            max-width: 1200px;
+            justify-content: center;
+            align-items: center ;
+            border: 1px solid #ccc;
+            padding: 10px;
         }
         #chart {
-            flex: 70%;
-            margin-right: 20px;
+           width: 100%;
+            height: 100%;
         }
-        #console-container {
+        #bottom-container {
+            display: flex;
             width: 100%;
             max-height: 300px;
+        }
+        #console-container {
+            flex : 50%;
             overflow-y: auto;
             background-color: #222;
             color: #0f0;
@@ -43,16 +56,18 @@
             font-family: monospace;
         }
         #summary {
-            margin-top: 20px;
+            flex : 50%;
             padding: 10px;
             border: 1px solid #ccc;
             background-color: #f9f9f9;
+            overflow-y: auto;
         }
     </style>
 </head>
 <body>
 <div id="main-container">
     <div id="content">
+        <div id="controls">
         <h1>Máquina de Galton</h1>
 
         <h2>Generar y Guardar CSV con Distribución Normal</h2>
@@ -67,28 +82,36 @@
         <input type="number" id="desviacionEstandar" value="2">
         <br>
         <button onclick="generarYGuardarCSV()">Generar y Guardar CSV</button>
-        <p id="resultado"></p>
+        <p id="resultadoGenerar"></p>
 
         <h2>Cargar Datos desde CSV a la Base de Datos</h2>
         <label for="filePath">Ruta del archivo CSV:</label>
         <input type="text" id="filePath" value="src/main/resources/distribucion_normal.csv">
         <br>
         <button onclick="cargarDatosCSV()">Cargar Datos(puede tardar unos segundos)</button>
+            <div id="loadingLogo" style="display: none;">
+                <img src="load.gif" alt="Loading...">
+            </div>
+        <p id="resultadoCargar" style="margin-top:10px"></p>
+
 
         <h2>Visualizar Tablero de Galton (10 fabricas)</h2>
         <label for="delay">Intervalo de tiempo (ms) entre actualizaciones:</label>
         <input type="number" id="delay" value="100">
         <br>
-        <button onclick="startGradualChartFormation()">Iniciar Visualización Gradual</button>
-
-        <div id="layout">
+            <button onclick="startGradualChartFormation();">Iniciar Visualización Gradual</button>
+        </div>
+        <div id="chart-container">
             <div id="chart"></div>
         </div>
+    </div>
+    <div id="bottom-container">
         <div id="console-container">
             <div id="console"></div>
         </div>
         <div id="summary"></div>
     </div>
+
 
 </div>
 
@@ -104,39 +127,55 @@
         fetch(`/generarCSV?filePath=${filePath}&numDatos=${numDatos}&media=${media}&desviacionEstandar=${desviacionEstandar}`)
             .then(response => response.text())
             .then(data => {
-                document.getElementById("resultado").innerText = data;
+                document.getElementById("resultadoGenerar").innerText = data;
             })
             .catch(error => {
                 console.error("Error al generar y guardar el CSV:", error);
-                document.getElementById("resultado").innerText = "Error al generar y guardar el CSV.";
+                document.getElementById("resultadoGenerar").innerText = "Error al generar y guardar el CSV.";
             });
     }
 
     function cargarDatosCSV() {
         const filePath = document.getElementById('filePath').value;
+        const loadingLogo = document.getElementById('loadingLogo');
+        const resultadoCargar = document.getElementById('resultadoCargar');
+
+        loadingLogo.style.display = 'block';
+        resultadoCargar.innerText = '';
 
         fetch(`/cargarDatosCSV?filePath=${filePath}`)
             .then(response => response.json())  // Procesar la respuesta como JSON
             .then(data => {
                 console.log("Datos cargados en la base de datos:", data.message);
-                document.getElementById("resultado").innerText = data.message;
+                resultadoCargar.innerText = data.message;
             })
             .catch(error => {
                 console.error("Error al cargar datos desde el CSV:", error);
-                document.getElementById("resultado").innerText = "Error al cargar datos desde el CSV.";
-            });
+                resultadoCargar.innerText = "Error al cargar datos desde el CSV.";
+            })
+        .finally(() => {
+            loadingLogo.style.display = 'none';
+        });
     }
+
+    let eventSource; // Global variable to store the EventSource
 
     function startGradualChartFormation() {
         const delay = document.getElementById('delay').value;
-        const eventSource = new EventSource(`/obtenerDatosGradual?delay=${delay}`);
-        const chartData = new Map(); // Utilizamos un Map para consolidar los datos por posición
+
+        // Close any existing EventSource before creating a new one
+        if (eventSource) {
+            eventSource.close();
+        }
+
+        eventSource = new EventSource(`/obtenerDatosGradual?delay=${delay}`);
+        const chartData = new Map(); // Use a Map to consolidate data by position
 
         eventSource.onmessage = function(event) {
             const dato = JSON.parse(event.data);
 
             if (dato.posicion !== undefined && dato.cantidad !== undefined) {
-                // Actualizar la cantidad en la posición especificada
+                // Update the quantity at the specified position
                 if (chartData.has(dato.posicion)) {
                     chartData.set(dato.posicion, chartData.get(dato.posicion) + dato.cantidad);
                 } else {
@@ -144,12 +183,12 @@
                 }
 
                 updateChart(Array.from(chartData.entries()).map(([posicion, cantidad]) => ({ posicion, cantidad })));
-                addConsoleMessage(`Añadida Bola en la posición: ${dato.posicion}`);
+                addConsoleMessage(`Added Ball at position: ${dato.posicion}`);
             }
         };
 
         eventSource.onerror = function() {
-            console.log("Conexión cerrada o error en el SSE");
+            console.log("Connection closed or error in SSE");
             eventSource.close();
         };
     }
@@ -229,6 +268,8 @@
             summaryElement.appendChild(div);
         });
     }
+
+
 </script>
 
 </body>
