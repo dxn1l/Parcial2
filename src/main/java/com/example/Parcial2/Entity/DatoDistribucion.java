@@ -14,13 +14,12 @@ public class DatoDistribucion {
     private int posicion;
     private int cantidad;
 
-    // Constructor, getters y setters
     public DatoDistribucion(int posicion, int cantidad) {
         this.posicion = posicion;
         this.cantidad = cantidad;
     }
 
-    public DatoDistribucion() {} // Constructor sin argumentos
+    public DatoDistribucion() {}
 
     public int getPosicion() {
         return posicion;

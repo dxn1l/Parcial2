@@ -5,112 +5,128 @@
     <title>Máquina de Galton</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <style>
-        body, html {
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        #main-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow-y: auto;
-        }
-        #content {
-            flex: 1;
-            display: flex;
-            flex-direction: row;
             padding: 20px;
         }
-        #controls {
-            flex: 30%;
-            display : flex;
-            flex-direction: column;
+
+        h1, h2 {
+            color: #4a90e2;
         }
-        #chart-container {
-            flex : 70%;
+
+        h2 {
+            margin-top: 20px;
+        }
+
+        #layout {
             display: flex;
-            justify-content: center;
-            align-items: center ;
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-        #chart {
-           width: 100%;
-            height: 100%;
-        }
-        #bottom-container {
-            display: flex;
+            flex-direction: row;
             width: 100%;
-            max-height: 300px;
+            max-width: 1200px;
+            margin-top: 20px;
         }
-        #console-container {
-            flex : 50%;
+
+        #chart {
+            width: 70%;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #fff;
+        }
+
+        #console {
+            width: 30%;
+            max-height: 300px;
             overflow-y: auto;
             background-color: #222;
             color: #0f0;
             padding: 10px;
             font-family: monospace;
+            border-radius: 5px;
+            margin-left: 10px;
         }
-        #summary {
-            flex : 50%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            background-color: #f9f9f9;
-            overflow-y: auto;
+
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+
+        input[type="number"], input[type="text"] {
+            width: 80px;
+            padding: 5px;
+            margin: 5px 0 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4a90e2;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #357ab9;
+        }
+
+        #csvResultado, #dbResultado {
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        #loader {
+            display: none;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-<div id="main-container">
-    <div id="content">
-        <div id="controls">
-        <h1>Máquina de Galton</h1>
+<h1>Máquina de Galton</h1>
 
-        <h2>Generar y Guardar CSV con Distribución Normal</h2>
-        <p>Configuración recomendada para distribución normal: Media=5, Desviación Estándar=2</p>
-        <label for="numDatos">Número de bolas:</label>
-        <input type="number" id="numDatos" value="1000">
-        <br>
-        <label for="media">Media:</label>
-        <input type="number" id="media" value="5">
-        <br>
-        <label for="desviacionEstandar">Desviación Estándar:</label>
-        <input type="number" id="desviacionEstandar" value="2">
-        <br>
-        <button onclick="generarYGuardarCSV()">Generar y Guardar CSV</button>
-        <p id="resultado"></p>
+<h2>Generar y Guardar CSV con Distribución Normal</h2>
+<p>Configuración recomendada para distribución normal: Media=5, Desviación Estándar=2</p>
+<label for="numDatos">Número de bolas:</label>
+<input type="number" id="numDatos" value="1000">
 
-        <h2>Cargar Datos desde CSV a la Base de Datos</h2>
-        <label for="filePath">Ruta del archivo CSV:</label>
-        <input type="text" id="filePath" value="src/main/resources/distribucion_normal.csv">
-        <br>
-        <button onclick="cargarDatosCSV()">Cargar Datos(puede tardar unos segundos)</button>
+<label for="media">Media:</label>
+<input type="number" id="media" value="5">
 
-        <h2>Visualizar Tablero de Galton (10 fabricas)</h2>
-        <label for="delay">Intervalo de tiempo (ms) entre actualizaciones:</label>
-        <input type="number" id="delay" value="100">
-        <br>
-        <button onclick="startGradualChartFormation()">Iniciar Visualización Gradual</button>
-        </div>
-        <div id="chart-container">
-            <div id="chart"></div>
-        </div>
-    </div>
-    <div id="bottom-container">
-        <div id="console-container">
-            <div id="console"></div>
-        </div>
-        <div id="summary"></div>
-    </div>
+<label for="desviacionEstandar">Desviación Estándar:</label>
+<input type="number" id="desviacionEstandar" value="2">
 
+<button onclick="generarYGuardarCSV()">Generar y Guardar CSV</button>
+<p id="csvResultado"></p>
 
+<h2>Cargar Datos desde CSV a la Base de Datos</h2>
+<label for="filePath">Ruta del archivo CSV:</label>
+<input type="text" id="filePath" value="src/main/resources/distribucion_normal.csv">
+<button onclick="cargarDatosCSV()">Cargar Datos (puede tardar unos segundos)</button>
+
+<div id="loader">
+    <img src="load.gif" alt="Cargando..." width="50" height="50">
 </div>
+<p id="dbResultado"></p>
 
+<h2>Visualizar Tablero de Galton (10 fábricas)</h2>
+<label for="delay">Intervalo de tiempo (ms) entre actualizaciones:</label>
+<input type="number" id="delay" value="100">
+<button onclick="startGradualChartFormation()">Iniciar Visualización Gradual</button>
 
+<div id="layout">
+    <div id="chart"></div>
+    <div id="console"></div>
+</div>
 
 <script>
     function generarYGuardarCSV() {
@@ -122,45 +138,63 @@
         fetch(`/generarCSV?filePath=${filePath}&numDatos=${numDatos}&media=${media}&desviacionEstandar=${desviacionEstandar}`)
             .then(response => response.text())
             .then(data => {
-                document.getElementById("resultado").innerText = data;
+                const csvResult = document.getElementById("csvResultado");
+                csvResult.innerText = data;
             })
             .catch(error => {
                 console.error("Error al generar y guardar el CSV:", error);
-                document.getElementById("resultado").innerText = "Error al generar y guardar el CSV.";
+                document.getElementById("csvResultado").innerText = "Error al generar y guardar el CSV.";
             });
     }
 
     function cargarDatosCSV() {
         const filePath = document.getElementById('filePath').value;
 
+        document.getElementById("csvResultado").innerText = "";
+
+        document.getElementById("loader").style.display = "block";
+        const dbResult = document.getElementById("dbResultado");
+        dbResult.innerText = "";
+
         fetch(`/cargarDatosCSV?filePath=${filePath}`)
-            .then(response => response.json())  // Procesar la respuesta como JSON
+            .then(response => response.json())
             .then(data => {
-                console.log("Datos cargados en la base de datos:", data.message);
-                document.getElementById("resultado").innerText = data.message;
+                dbResult.innerText = data.message;
             })
             .catch(error => {
                 console.error("Error al cargar datos desde el CSV:", error);
-                document.getElementById("resultado").innerText = "Error al cargar datos desde el CSV.";
+                dbResult.innerText = "Error al cargar datos desde el CSV.";
+            })
+            .finally(() => {
+                document.getElementById("loader").style.display = "none";
             });
     }
 
+    let eventSource;
+
     function startGradualChartFormation() {
+
+        document.getElementById("dbResultado").innerText = "";
+
         const delay = document.getElementById('delay').value;
-        const eventSource = new EventSource(`/obtenerDatosGradual?delay=${delay}`);
-        const chartData = new Map(); // Utilizamos un Map para consolidar los datos por posición
+
+        if (eventSource) {
+            eventSource.close();
+            console.log("Conexión SSE anterior cerrada.");
+        }
+
+        eventSource = new EventSource(`/obtenerDatosGradual?delay=${delay}`);
+        const chartData = new Map();
 
         eventSource.onmessage = function(event) {
             const dato = JSON.parse(event.data);
 
             if (dato.posicion !== undefined && dato.cantidad !== undefined) {
-                // Actualizar la cantidad en la posición especificada
                 if (chartData.has(dato.posicion)) {
                     chartData.set(dato.posicion, chartData.get(dato.posicion) + dato.cantidad);
                 } else {
                     chartData.set(dato.posicion, dato.cantidad);
                 }
-
                 updateChart(Array.from(chartData.entries()).map(([posicion, cantidad]) => ({ posicion, cantidad })));
                 addConsoleMessage(`Añadida Bola en la posición: ${dato.posicion}`);
             }
@@ -233,21 +267,7 @@
             .attr("text-anchor", "middle")
             .attr("fill", "black")
             .attr("font-size", "10px");
-
-        updateSummary(chartData);
-    }
-
-    function updateSummary(chartData) {
-        const summaryElement = document.getElementById("summary");
-        summaryElement.innerHTML = "<h3>Resumen de Bolas por Contenedor</h3>";
-
-        chartData.forEach(dato => {
-            const div = document.createElement("div");
-            div.textContent = `Contenedor ${dato.posicion}: ${dato.cantidad} bolas`;
-            summaryElement.appendChild(div);
-        });
     }
 </script>
-
 </body>
 </html>

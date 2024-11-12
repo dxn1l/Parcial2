@@ -36,6 +36,7 @@ public class EnsamblajeService {
             System.err.println("SseEmitter es null o ha sido completado. No se puede enviar el dato.");
         }
     }
+
 }
 
 
