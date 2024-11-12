@@ -5,14 +5,36 @@
     <title>Máquina de Galton</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #main-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+        }
+        #content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
         #layout {
             display: flex;
+            width: 100%;
+            max-width: 1200px;
         }
         #chart {
-            width: 70%;
+            flex: 70%;
+            margin-right: 20px;
         }
-        #console {
-            width: 30%;
+        #console-container {
+            width: 100%;
             max-height: 300px;
             overflow-y: auto;
             background-color: #222;
@@ -29,37 +51,43 @@
     </style>
 </head>
 <body>
-<h1>Máquina de Galton</h1>
+<div id="main-container">
+    <div id="content">
+        <h1>Máquina de Galton</h1>
 
-<h2>Generar y Guardar CSV con Distribución Normal</h2>
-<p>Configuración recomendada para distribución normal: Media=5, Desviación Estándar=2</p>
-<label for="numDatos">Número de bolas:</label>
-<input type="number" id="numDatos" value="1000">
-<br>
-<label for="media">Media:</label>
-<input type="number" id="media" value="5">
-<br>
-<label for="desviacionEstandar">Desviación Estándar:</label>
-<input type="number" id="desviacionEstandar" value="2">
-<br>
-<button onclick="generarYGuardarCSV()">Generar y Guardar CSV</button>
-<p id="resultado"></p>
+        <h2>Generar y Guardar CSV con Distribución Normal</h2>
+        <p>Configuración recomendada para distribución normal: Media=5, Desviación Estándar=2</p>
+        <label for="numDatos">Número de bolas:</label>
+        <input type="number" id="numDatos" value="1000">
+        <br>
+        <label for="media">Media:</label>
+        <input type="number" id="media" value="5">
+        <br>
+        <label for="desviacionEstandar">Desviación Estándar:</label>
+        <input type="number" id="desviacionEstandar" value="2">
+        <br>
+        <button onclick="generarYGuardarCSV()">Generar y Guardar CSV</button>
+        <p id="resultado"></p>
 
-<h2>Cargar Datos desde CSV a la Base de Datos</h2>
-<label for="filePath">Ruta del archivo CSV:</label>
-<input type="text" id="filePath" value="src/main/resources/distribucion_normal.csv">
-<br>
-<button onclick="cargarDatosCSV()">Cargar Datos(puede tardar unos segundos)</button>
+        <h2>Cargar Datos desde CSV a la Base de Datos</h2>
+        <label for="filePath">Ruta del archivo CSV:</label>
+        <input type="text" id="filePath" value="src/main/resources/distribucion_normal.csv">
+        <br>
+        <button onclick="cargarDatosCSV()">Cargar Datos(puede tardar unos segundos)</button>
 
-<h2>Visualizar Tablero de Galton (10 fabricas)</h2>
-<label for="delay">Intervalo de tiempo (ms) entre actualizaciones:</label>
-<input type="number" id="delay" value="100">
-<br>
-<button onclick="startGradualChartFormation()">Iniciar Visualización Gradual</button>
+        <h2>Visualizar Tablero de Galton (10 fabricas)</h2>
+        <label for="delay">Intervalo de tiempo (ms) entre actualizaciones:</label>
+        <input type="number" id="delay" value="100">
+        <br>
+        <button onclick="startGradualChartFormation()">Iniciar Visualización Gradual</button>
 
-<div id="layout">
-    <div id="chart"></div>
-    <div id="console"></div>
+        <div id="layout">
+            <div id="chart"></div>
+        </div>
+        <div id="console-container">
+            <div id="console"></div>
+        </div>
+    </div>
 </div>
 
 <div id="summary"></div>

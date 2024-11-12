@@ -93,6 +93,7 @@
     function startGradualChartFormation() {
         const delay = document.getElementById('delay').value;
         const eventSource = new EventSource(`/obtenerDatosGradual?delay=${delay}`);
+
         const chartData = new Map(); // Utilizamos un Map para consolidar los datos por posición
 
         eventSource.onmessage = function(event) {
@@ -107,6 +108,7 @@
                 }
 
                 updateChart(Array.from(chartData.entries()).map(([posicion, cantidad]) => ({ posicion, cantidad })));
+
                 addConsoleMessage(`Añadida Bola en la posición: ${dato.posicion}`);
             }
         };
