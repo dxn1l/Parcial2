@@ -20,12 +20,6 @@
             padding: 10px;
             font-family: monospace;
         }
-        #summary {
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            background-color: #f9f9f9;
-        }
     </style>
 </head>
 <body>
@@ -62,8 +56,6 @@
     <div id="console"></div>
 </div>
 
-<div id="summary"></div>
-
 <script>
     function generarYGuardarCSV() {
         const numDatos = document.getElementById('numDatos').value;
@@ -97,6 +89,7 @@
             });
     }
 
+
     function startGradualChartFormation() {
         const delay = document.getElementById('delay').value;
         const eventSource = new EventSource(`/obtenerDatosGradual?delay=${delay}`);
@@ -123,6 +116,7 @@
             eventSource.close();
         };
     }
+
 
     function addConsoleMessage(message) {
         const consoleElement = document.getElementById("console");
@@ -185,19 +179,6 @@
             .attr("text-anchor", "middle")
             .attr("fill", "black")
             .attr("font-size", "10px");
-
-        updateSummary(chartData);
-    }
-
-    function updateSummary(chartData) {
-        const summaryElement = document.getElementById("summary");
-        summaryElement.innerHTML = "<h3>Resumen de Bolas por Contenedor</h3>";
-
-        chartData.forEach(dato => {
-            const div = document.createElement("div");
-            div.textContent = `Contenedor ${dato.posicion}: ${dato.cantidad} bolas`;
-            summaryElement.appendChild(div);
-        });
     }
 </script>
 
