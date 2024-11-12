@@ -1,7 +1,6 @@
 package com.example.Parcial2.Entity;
 
 import com.example.Parcial2.config.RabbitMQConfig;
-import com.example.Parcial2.Entity.DatoDistribucion;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import reactor.core.publisher.Flux;
 import reactor.util.retry.Retry;

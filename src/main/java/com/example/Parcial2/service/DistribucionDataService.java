@@ -5,10 +5,6 @@ import com.example.Parcial2.Repository.DatoDistribucionRepository;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-
 
 @Service
 public class DistribucionDataService {
@@ -23,16 +19,13 @@ public class DistribucionDataService {
 
     public List<DatoDistribucion> cargarDatosDesdeCSV(String filePath) throws IOException {
         List<DatoDistribucion> datosCSV = csvService.leerYGuardarDatosDesdeCSV(filePath);
-        return datosCSV; // Retornar los datos leídos y guardados en la BD
+        return datosCSV;
     }
-
-
 
     public List<DatoDistribucion> obtenerDatos() {
         List<DatoDistribucion> datos = repository.findAll();
         System.out.println("Total de datos obtenidos de la base de datos: " + datos.size());
         return datos;
-        //return repository.findAll();
     }
 
 
