@@ -89,6 +89,46 @@
             display: none;
             margin-top: 10px;
         }
+        #console {
+            width: 30%;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #222;
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+
+        #counterContainer {
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 20px;
+            background-color: #fafafa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+        }
+        .counter-column {
+            display: flex;
+            flex-direction: column;
+            width: 50%;
+            padding: 10px;
+        }
+
+        .counter-item {
+            padding: 5px;
+            margin: 5px 0;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -128,6 +168,12 @@
     <div id="console"></div>
 </div>
 
+<div id="counterContainer">
+    <h2>Contador de Bolas por Contenedor</h2>
+    <div class="counter-column" id="leftColumn"></div>
+    <div class="counter-column" id="rightColumn"></div>
+</div>
+
 <script>
     function generarYGuardarCSV() {
         const numDatos = document.getElementById('numDatos').value;
@@ -150,10 +196,9 @@
     function cargarDatosCSV() {
         const filePath = document.getElementById('filePath').value;
 
-        // Ocultar mensaje de creación de CSV
         document.getElementById("csvResultado").innerText = "";
 
-        document.getElementById("loader").style.display = "block"; // Mostrar loader
+        document.getElementById("loader").style.display = "block";
         const dbResult = document.getElementById("dbResultado");
         dbResult.innerText = "";
 
@@ -167,14 +212,14 @@
                 dbResult.innerText = "Error al cargar datos desde el CSV.";
             })
             .finally(() => {
-                document.getElementById("loader").style.display = "none"; // Ocultar loader
+                document.getElementById("loader").style.display = "none";
             });
     }
 
     let eventSource;
 
     function startGradualChartFormation() {
-        // Ocultar mensaje de datos cargados
+
         document.getElementById("dbResultado").innerText = "";
 
         const delay = document.getElementById('delay').value;
@@ -217,6 +262,8 @@
 
     function updateChart(data) {
         const posiciones = Array.from({ length: 10 }, () => 0);
+        const leftColumn = document.getElementById("leftColumn");
+        const rightColumn = document.getElementById("rightColumn");
 
         data.forEach(dato => {
             const posicion = dato.posicion;
@@ -268,6 +315,12 @@
             .attr("text-anchor", "middle")
             .attr("fill", "black")
             .attr("font-size", "10px");
+        updateCounter(chartData);
+    }
+    function updateCounter(data) {
+        const counterElement = document.getElementById("counter");
+        const counterText = data.map(dato => `Contenedor ${dato.posicion}: ${dato.cantidad} bolas`).join(" | ");
+        counterElement.innerText = counterText;
     }
 </script>
 </body>
