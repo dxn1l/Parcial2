@@ -89,6 +89,30 @@
             display: none;
             margin-top: 10px;
         }
+        #console {
+            width: 30%;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #222;
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+
+        #counterContainer {
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 20px;
+            background-color: #fafafa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -126,6 +150,11 @@
 <div id="layout">
     <div id="chart"></div>
     <div id="console"></div>
+</div>
+
+<div id="counterContainer">
+    <h2>Contador de Bolas por Contenedor</h2>
+    <div id="counter"></div>
 </div>
 
 <script>
@@ -267,6 +296,12 @@
             .attr("text-anchor", "middle")
             .attr("fill", "black")
             .attr("font-size", "10px");
+        updateCounter(chartData);
+    }
+    function updateCounter(data) {
+        const counterElement = document.getElementById("counter");
+        const counterText = data.map(dato => `Contenedor ${dato.posicion}: ${dato.cantidad} bolas`).join(" | ");
+        counterElement.innerText = counterText;
     }
 </script>
 </body>
